@@ -1,0 +1,44 @@
+ЛР №6 
+Проектування багатотабличних запитів (внутрішнє з'єднання, inner join, left join, right join, self join, subquery, correlated subquery, exists, not exist, union)
+1.	Вивести значення наступних колонок: назва книги, ціна, назва видавництва. Використовувати внутрішнє з'єднання, застосовуючи where.
+SELECT Назва, Ціна, Видавництво FROM t1,t4 WHERE t1.id_bud=t4.id;
+2.	Вивести значення наступних колонок: назва книги, назва категорії. Використовувати внутрішнє з'єднання, застосовуючи inner join.
+SELECT Назва, Ціна, Категорія FROM t1 INNER JOIN t2 ON t1.id_new=t2.id;
+3.	Вивести значення наступних колонок: назва книги, ціна, назва видавництва, формат.
+SELECT Назва, Ціна, Категорія, Тираж FROM t1 INNER JOIN t2 ON t1.id_new=t2.id INNER JOIN t3 ON t1.id_tirag=t3.id;
+4.	Вивести значення наступних колонок: тема, категорія, назва книги, назва видавництва. Фільтр по темам і категоріям.
+SELECT Назва, Ціна, Видавництво, Категорія, Тема FROM t1 INNER JOIN t2 ON t1.id_new=t2.id INNER JOIN t4 ON t1.id_bud=t4.id ORDER BY Категорія, Тема DESC;
+5.	Вивести книги видавництва 'BHV', видані після 2000 р
+SELECT*FROM t1 INNER JOIN t4 ON t1.id_bud=t4.id WHERE Видавництво LIKE'BHV%'AND YEAR(`Дата`)>=2000   ;
+6.	Вивести загальну кількість сторінок по кожній назві категорії. Фільтр по спадаючій кількості сторінок.
+SELECT Категорія, COUNT(*), SUM(Сторінки) FROM t1 INNER JOIN t2 ON t1.id_new=t2.id GROUP BY Категорія ORDER BY SUM(Сторінки) DESC;
+7.	Вивести середню вартість книг по темі 'Використання ПК' і категорії 'Linux'.
+SELECT AVG(Ціна), Категорія, Тема FROM t1 INNER JOIN t2 ON t1.id_new=t2.id  WHERE Тема LIKE'%Операційні системи%' AND Категорія LIKE '%Linux%' ;
+8.	Вивести всі дані універсального відношення. Використовувати внутрішнє з'єднання, застосовуючи where.
+SELECT*FROM t1, t2, t3, t4 WHERE t1.id_bud=t4.id AND t1.id_new=t2.id AND t1.id_tirag=t3.id;
+9.	Вивести всі дані універсального відношення. Використовувати внутрішнє з'єднання, застосовуючи inner join.
+SELECT*FROM t1 INNER JOIN t2 ON t1.id_new=t2.id INNER JOIN t3 ON t1.id_tirag=t3.id INNER JOIN t4 ON t1.id_bud=t4.id;
+10.	Вивести всі дані універсального відношення. Використовувати зовнішнє з'єднання, застосовуючи left join / rigth join.
+SELECT*FROM t1 LEFT JOIN t2 ON t1.id_new=t2.id LEFT JOIN t3 ON t1.id_tirag=t3.id LEFT JOIN t4 ON t1.id_bud=t4.id;
+SELECT*FROM t1 RIGHT JOIN t2 ON t1.id_new=t2.id RIGHT JOIN t3 ON t1.id_tirag=t3.id RIGHT JOIN t4 ON t1.id_bud=t4.id;
+11.	Вивести пари книг, що мають однакову кількість сторінок. Використовувати само об’єднання і аліаси (self join).
+SELECT CONCAT(A.Назва, ',', B.Назва) AS Назва1, A.Сторінки FROM t1 A, t1 B WHERE A.id<>B.id AND A.Сторінки=B.Сторінки ORDER BY A.Сторінки;
+12.	Вивести тріади книг, що мають однакову ціну. Використовувати самооб'єднання і аліаси (self join).
+SELECT CONCAT(A.Назва, ',', B.Назва, ',', C.Назва) AS Назва1, A.Ціна FROM t1 A, t1 B, t1 C WHERE A.id<>B.id<>C.id AND A.Ціна=B.Ціна=C.Ціна ORDER BY A.Ціна;
+13.	Вивести всі книги категорії 'C ++'. Використовувати підзапити (subquery).
+SELECT Назва FROM t1 INNER JOIN t2 ON t1.id_new=t2.id WHERE Категорія IN (SELECT Категорія FROM t2 WHERE Категорія LIKE '%C++%') ;
+14.	Вивести книги видавництва 'BHV', видані після 2000 р Використовувати підзапити (subquery).
+SELECT Назва FROM t1 INNER JOIN t4 ON t1.id_bud=t4.id WHERE Видавництво IN (SELECT Видавництво FROM t4 WHERE Видавництво LIKE '%BHV%') AND YEAR(Дата)>=2000 ;
+15.	Вивести список видавництв, у яких розмір книг перевищує 400 сторінок. Використовувати пов'язані підзапити (correlated subquery).
+SELECT Сторінки, (SELECT Видавництво FROM t4 WHERE t1.id_bud=t4.id) FROM t1 WHERE Сторінки>=400;
+16.	Вивести список категорій в яких більше 3-х книг. Використовувати пов'язані підзапити (correlated subquery).
+SELECT Назва, (SELECT Категорія FROM t2 WHERE t1.id_new=t2.id) FROM t1  WHERE Назва<=3; 
+17.	Вивести список книг видавництва 'BHV', якщо в списку є хоча б одна книга цього видавництва. Використовувати exists.
+SELECT*FROM t1  WHERE EXISTS (SELECT Видавництво FROM t4 WHERE t1.id_bud=t4.id AND Видавництво LIKE '%BHV%');
+18.	Вивести список книг видавництва 'BHV', якщо в списку немає жодної книги цього видавництва. Використовувати not exists.
+SELECT*FROM t1  WHERE NOT EXISTS (SELECT Видавництво FROM t4 WHERE t1.id_bud=t4.id AND Видавництво LIKE '%BHV%');
+19.	Вивести відсортований загальний список назв тем і категорій. Використовувати union.
+SELECT Назва FROM t5 UNION ALL SELECT Назва FROM t2 ORDER BY Назва; 
+20.	Вивести відсортований в зворотному порядку загальний список перших слів, назв книг і категорій що не повторюються. Використовувати union.
+SELECT DISTINCT IF(INSTR(Назва, ' ') >0, LEFT(Назва, INSTR(Назва, ' ') - 1), Назва) AS new FROM t1 UNION SELECT DISTINCT IF(INSTR(Категорія, ' ') >0, LEFT(Категорія, INSTR(Категорія, ' ') - 1), Категорія) AS new FROM t2 ORDER BY new DESC;
+ 

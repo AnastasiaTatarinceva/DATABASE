@@ -1,0 +1,130 @@
+ЛР №7
+Проектування і перевірка збережених процедур (stored procedure): без параметрів, з вхідними параметрами, з вхідними параметрами за замовчуванням, з вихідними параметрами
+1.	Вивести значення наступних колонок: назва книги, ціна, назва видавництва, формат.
+DELIMITER $$
+CREATE PROCEDURE GetProduct2()
+BEGIN         
+SELECT Назва, Ціна, Категорія, Тираж FROM t1 INNER JOIN t2 ON t1.id_new=t2.id INNER JOIN t3 ON t1.id_tirag=t3.id;      
+END$$
+DELIMITER ;
+CALL GetProduct2();
+2.	Вивести значення наступних колонок: тема, категорія, назва книги, назва видавництва. Фільтр по темам і категоріям
+DELIMITER $$
+CREATE PROCEDURE GetProduct()
+BEGIN         
+SELECT Назва, Ціна, Видавництво, Категорія, Тема FROM t1 INNER JOIN t2 ON t1.id_new=t2.id INNER JOIN t4 ON t1.id_bud=t4.id ORDER BY Категорія, Тема DESC; 
+END$$
+DELIMITER ;
+CALL GetProduct();
+3.	Вивести книги видавництва 'BHV', видані після 2000 р
+DELIMITER $$
+CREATE PROCEDURE GetProduct1(IN Дата DATE)
+BEGIN         
+SELECT Назва FROM t1 INNER JOIN t4 ON t1.id_bud=t4.id WHERE Видавництво IN (SELECT Видавництво FROM t4 WHERE Видавництво LIKE '%BHV%') AND YEAR(Дата)>=2000 ; 
+END$$
+DELIMITER ;
+CALL GetProduct11('07.07.2000');
+4.	Вивести загальну кількість сторінок по кожній назві категорії. Фільтр по спадаючій / зростанню кількості сторінок.
+DELIMITER $$
+CREATE PROCEDURE GetProduct10()
+BEGIN         
+SELECT Категорія, COUNT(*), SUM(Сторінки) FROM t1 INNER JOIN t2 ON t1.id_new=t2.id GROUP BY Категорія ORDER BY SUM(Сторінки) DESC;
+END$$
+DELIMITER ;
+CALL GetProduct10();
+5.	Вивести середню вартість книг по темі 'Використання ПК' і категорії 'Linux'.
+DELIMITER $$
+CREATE PROCEDURE GetProduct01()
+BEGIN         
+SELECT AVG(Ціна), Категорія, Тема FROM t1 INNER JOIN t2 ON t1.id_new=t2.id  WHERE Тема LIKE'%Операційні системи%' AND Категорія LIKE '%Linux%' ; 
+END$$
+DELIMITER ;
+CALL GetProduct01();
+6.	Вивести всі дані універсального відношення.
+DELIMITER $$
+CREATE PROCEDURE GetProduct02()
+BEGIN         
+SELECT*FROM t1 LEFT JOIN t2 ON t1.id_new=t2.id LEFT JOIN t3 ON t1.id_tirag=t3.id LEFT JOIN t4 ON t1.id_bud=t4.id;
+END$$
+DELIMITER ;
+CALL GetProduct02();
+OR
+DELIMITER $$
+CREATE PROCEDURE GetProduct02()
+BEGIN         
+SELECT*FROM t1 RIGHT JOIN t2 ON t1.id_new=t2.id RIGHT JOIN t3 ON t1.id_tirag=t3.id RIGHT JOIN t4 ON t1.id_bud=t4.id;
+END$$
+DELIMITER ;
+CALL GetProduct02();
+7.	Вивести пари книг, що мають однакову кількість сторінок.
+DELIMITER $$
+       CREATE PROCEDURE GetProduct03()
+BEGIN         
+SELECT CONCAT(A.Назва, ',', B.Назва) AS Назва1, A.Сторінки FROM t1 A, t1 B WHERE A.id<>B.id AND A.Сторінки=B.Сторінки ORDER BY A.Сторінки;
+END$$
+DELIMITER ;
+CALL GetProduct03();
+8.	Вивести тріади книг, що мають однакову ціну.
+DELIMITER $$
+CREATE PROCEDURE GetProduct04()
+BEGIN         
+SELECT CONCAT(A.Назва, ',', B.Назва, ',', C.Назва) AS Назва1, A.Ціна FROM t1 A, t1 B, t1 C WHERE A.id<>B.id<>C.id AND A.Ціна=B.Ціна=C.Ціна ORDER BY A.Ціна;
+END$$
+DELIMITER ;
+CALL GetProduct04();
+9.	Вивести всі книги категорії 'C ++'.
+DELIMITER $$
+CREATE PROCEDURE GetProduct05()
+BEGIN         
+SELECT Назва FROM t1 INNER JOIN t2 ON t1.id_new=t2.id WHERE Категорія IN (SELECT Категорія FROM t2 WHERE Категорія LIKE '%C++%') ;
+END$$
+DELIMITER ;
+CALL GetProduct05();
+10.	Вивести список видавництв, у яких розмір книг перевищує 400 сторінок.
+DELIMITER $$
+CREATE PROCEDURE GetProduct06()
+BEGIN         
+SELECT Сторінки, (SELECT Видавництво FROM t4 WHERE t1.id_bud=t4.id) FROM t1 WHERE Сторінки>=400;
+END$$
+DELIMITER ;
+CALL GetProduct06();
+11.	Вивести список категорій за якими більше 3-х книг.
+DELIMITER $$
+CREATE PROCEDURE GetProduct07()
+BEGIN         
+SELECT Назва, (SELECT Категорія FROM t2 WHERE t1.id_new=t2.id) FROM t1  WHERE Назва<=3; 
+END$$
+DELIMITER ;
+CALL GetProduct07();
+12.	Вивести список книг видавництва 'BHV', якщо в списку є хоча б одна книга цього видавництва.
+DELIMITER $$
+CREATE PROCEDURE GetProduct08()
+BEGIN         
+SELECT*FROM t1  WHERE NOT EXISTS (SELECT Видавництво FROM t4 WHERE t1.id_bud=t4.id AND Видавництво LIKE '%BHV%');
+END$$
+DELIMITER ;
+CALL GetProduct08();
+13.	Вивести список книг видавництва 'BHV', якщо в списку немає жодної книги цього видавництва.
+DELIMITER $$
+CREATE PROCEDURE GetProduct09()
+BEGIN         
+SELECT*FROM t1  WHERE NOT EXISTS (SELECT Видавництво FROM t4 WHERE t1.id_bud=t4.id AND Видавництво LIKE '%BHV%');
+END$$
+DELIMITER ;
+CALL GetProduct09();
+14.	Вивести відсортоване загальний список назв тем і категорій.
+DELIMITER $$
+CREATE PROCEDURE GetProduct12()
+BEGIN         
+SELECT Сторінки, (SELECT Видавництво FROM t4 WHERE t1.id_bud=t4.id) FROM t1 WHERE Сторінки>=400;
+END$$
+DELIMITER ;
+CALL GetProduct12();
+15.	Вивести відсортований в зворотному порядку загальний список перших слів назв книг і категорій що не повторюються
+DELIMITER $$
+CREATE PROCEDURE GetProduct13()
+BEGIN         
+SELECT DISTINCT IF(INSTR(Назва, ' ') >0, LEFT(Назва, INSTR(Назва, ' ') - 1), Назва) AS new FROM t1 UNION SELECT DISTINCT IF(INSTR(Категорія, ' ') >0, LEFT(Категорія, INSTR(Категорія, ' ') - 1), Категорія) AS new FROM t2 ORDER BY new DESC;
+END$$
+DELIMITER ;
+CALL GetProduct13();
