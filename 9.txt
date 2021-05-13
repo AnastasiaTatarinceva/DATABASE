@@ -1,0 +1,46 @@
+1.	Розробити та перевірити скалярну (scalar) функцію, що повертає загальну вартість книг виданих в певному році.
+CREATE FUNCTION sum_price ()
+RETURNS DOUBLE
+RETURN (SELECT SUM(`t1`.`Ціна`) FROM
+`t1`) ;
+SELECT sum_price();
+2.	Розробити і перевірити табличну (inline) функцію, яка повертає список книг виданих в певному році.
+3.	Розробити і перевірити функцію типу multi-statement, яка буде:
+a.	приймати в якості вхідного параметра рядок, що містить список назв видавництв, розділених символом ‘;’;  
+b.	виділяти з цього рядка назву видавництва;
+c.	формувати нумерований список назв видавництв.
+4.	Виконати набір операцій по роботі з SQL курсором: оголосити курсор;
+a.	використовувати змінну для оголошення курсору;
+b.	відкрити курсор;
+c.	переприсвоїти курсор іншої змінної;
+d.	виконати вибірку даних з курсору;
+e.	закрити курсор;
+DELIMITER $$
+CREATE PROCEDURE createName (
+  INOUT first_name varchar(4000)
+)
+BEGIN
+  DECLARE finished INTEGER DEFAULT 0;
+  DECLARE last_name varchar(100) DEFAULT "";
+  DEClARE curName 
+    CURSOR FOR 
+      SELECT `Код` FROM t1;
+  DECLARE CONTINUE HANDLER 
+        FOR NOT FOUND SET finished = 1;
+
+  OPEN curName;
+
+  getName: LOOP
+    FETCH curName INTO last_name;
+    IF finished = 1 THEN 
+      LEAVE getName;
+    END IF;
+    SET first_name = CONCAT(last_name,";",first_name);
+  END LOOP getName;
+  CLOSE curName;
+
+END$$
+DELIMITER ;
+SET @firstName = "";
+CALL createName(@firstName);
+SELECT @firstName;

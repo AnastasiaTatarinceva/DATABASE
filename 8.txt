@@ -1,0 +1,84 @@
+Реалізувати набір тригерів, що реалізують такі ділові правила:
+1.	Кількість тем може бути в діапазоні від 5 до 10.
+DELIMITER $$
+CREATE TRIGGER trigger1 BEFORE INSERT ON t5
+FOR EACH ROW BEGIN
+IF (SELECT COUNT(Тема) FROM t5)>10 THEN SIGNAL SQLTATE ‘45000’ SET MESSAGE_TEXT = ‘ERROR’;
+ELSEIF (select count(Тема) FROM t5) < 5
+THEN
+SET @err2=’ERROR’;
+END IF;
+$$
+DELIMITER $$
+2.	Новинкою може бути тільки книга видана в поточному році.
+DELIMITER $$
+CREATE TRIGGER trigger2 BEFORE INSERT ON t1
+FOR EACH ROW BEGIN
+ IF (SELECT NEW.COUNT(Назва) FROM t1) CURRENT_DATE(Дата);
+END;
+$$
+DELIMITER $$
+3.	Книга з кількістю сторінок до 100 не може коштувати більше 10 $, до 200 - 20 $, до 300 - 30 $.
+DELIMITER $$
+CREATE TRIGGER trigger3 BEFORE INSERT ON t1
+FOR EACH ROW
+IF (new.Сторінки<100 AND new.Ціна>10) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR100';
+ELSEIF (new.Сторінки<200 AND new.Ціна>20) THEN SET @err2 = 'ERROR200';
+ELSEIF (new.Сторінки<300 AND new.Ціна>30) THEN SET @err3 = 'ERROR300';
+END IF;
+$$ 
+4.	Видавництво "BHV" не випускає книги накладом меншим 5000, а видавництво Diasoft - 10000.
+DELIMITER $$
+CREATE TRIGGER trigger4 BEFORE INSERT ON t1
+FOR EACH ROW
+IF (new.id_bud LIKE '%1%' AND new.Код < 5000) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR100';
+ELSEIF (new.id_bud LIKE '%5%' AND new.Код < 10000) THEN SET @err2 = 'ERROR200';
+END IF;
+$$ 
+5.	Книги з однаковим кодом повинні мати однакові дані.
+
+6.	При спробі видалення книги видається інформація про кількість видалених рядків. Якщо користувач не "dbo", то видалення забороняється.
+DELIMITER $$
+CREATE TRIGGER trigger7 BEFORE DELETE ON lab50.t1
+FOR EACH ROW
+IF (CURRENT_USER NOT LIKE 'root') Then SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR';
+ELSEIF (CURRENT_USER LIKE 'root') Then SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR';
+END IF;
+$$
+7.	Користувач "dbo" не має права змінювати ціну книги.
+DELIMITER $$
+CREATE TRIGGER triger6 BEFORE UPDATE ON lab50.t1
+FOR EACH ROW
+IF (new.Ціна <> old.Ціна && CURRENT_USER NOT LIKE 'root') Then SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR';
+END IF;
+$$
+8.	 Видавництва ДМК і Еком підручники не видають.
+DELIMITER $$
+CREATE TRIGGER trigger8 BEFORE INSERT ON t1
+FOR EACH ROW BEGIN
+IF (SELECT Видавництво FROM t4 WHERE Видавництво LIKE '%ДМК%')  THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR';
+ELSEIF (SELECT Видавництво FROM t4 WHERE Видавництво LIKE '%Еком%') THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERROR';
+END IF;
+END;
+$$
+DELIMITER $$
+INSERT INTO t1 (Код, Новинка, Назва, Ціна, Сторінки, Дата, Тема, id_new, id_bud, id_tirag, id_tema) VALUES 
+(5120, 'No', 'Видеосистема РС',	14.5, 440, 2021-24-07, 'Використання ПК в цілому', 1, 6, 1, 2)
+9.	Видавництво не може випустити більше 10 новинок протягом одного місяця поточного року.
+DELIMITER $$
+CREATE TRIGGER trigger1 BEFORE INSERT ON t4
+FOR EACH ROW BEGIN
+IF (SELECT NEW.Видавництво FROM t4) Новинка<10  ;
+END IF;
+END;
+$$
+10.	Видавництво BHV не випускає книги формату 60х88 / 16.
+DELIMITER $$
+CREATE TRIGGER trigger1 BEFORE INSERT ON t4
+FOR EACH ROW BEGIN
+IF (SELECT NEW.Видавництво FROM t4) Видавництво NOT LIKE ‘60х88 /16’ ;
+END IF;
+END;
+$$
+
+
